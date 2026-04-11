@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIBANSOS - Dashboard CRUD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .transition-all { transition: all 0.2s ease; }
+        .modal { display: none; }
+        .modal.show { display: flex; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <site-header></site-header>
+
+    <main class="container mx-auto px-4 py-8 flex-1 w-full max-w-6xl">
+        
+        <!-- Header & Stats -->
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900">Dashboard Pencatatan Bantuan Sosial</h2>
+                <p class="text-gray-600 mt-2 text-lg">CRUD Lengkap - Tambah, Edit, Hapus Data</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="upload.html" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all">
+                    📤 Upload Excel
+                </a>
+                <button id="btnTambah" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all">
+                    ➕ Tambah Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Kartu Statistik -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="text-2xl mb-1">👥</div>
+                <h3 class="text-2xl font-bold text-gray-800" id="totalKPM">0</h3>
+                <p class="text-gray-500 text-sm">Total KPM</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="text-2xl mb-1">✅</div>
+                <h3 class="text-2xl font-bold text-green-600" id="tersalurkan">0</h3>
+                <p class="text-gray-500 text-sm">Tersalurkan</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="text-2xl mb-1">⏳</div>
+                <h3 class="text-2xl font-bold text-amber-600" id="pending">0</h3>
+                <p class="text-gray-500 text-sm">Pending/Proses</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div class="text-2xl mb-1">❌</div>
+                <h3 class="text-2xl font-bold text-red-600" id="gagal">0</h3>
+                <p class="text-gray-500 text-sm">Gagal</p>
+            </div>
+        </div>
+
+        <!-- Tabel Data CRUD -->
+        <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-200">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800">📋 Data Penerima Bantuan</h3>
+                <button id="refreshBtn" class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                    <span>🔄</span> Refresh
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-gray-500 border-b-2 border-gray-200">
+                        <tr>
+                            <th class="pb-3 pr-2">#</th>
+                            <th class="pb-3 pr-4">NIK</th>
+                            <th class="pb-3 pr-4">Nama Lengkap</th>
+                            <th class="pb-3 pr-4">Alamat</th>
+                            <th class="pb-3 pr-4">Jenis Bantuan</th>
+                            <th class="pb-3 pr-4">Status</th>
+                            <th class="pb-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100">
+                        <tr><td colspan="7" class="py-8 text-center text-gray-500">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Form (Tambah/Edit) -->
+    <div id="modalForm" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Tambah Data Penerima</h3>
+                <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <form id="formPenerima">
+                <input type="hidden" id="editId" value="">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NIK *</label>
+                    <input type="text" id="nik" maxlength="20" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
+                    <input type="text" id="nama_lengkap" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                    <input type="text" id="alamat" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Bantuan</label>
+                    <select id="jenis_bantuan" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Pilih --</option>
+                        <option value="BLT Dana Desa">BLT Dana Desa</option>
+                        <option value="PKH">PKH</option>
+                        <option value="BPNT">BPNT</option>
+                        <option value="BST">BST</option>
+                        <option value="BLT BBM">BLT BBM</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Pending">Pending</option>
+                        <option value="Proses">Proses</option>
+                        <option value="Tersalurkan">Tersalurkan</option>
+                        <option value="Gagal">Gagal</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="cancelModal" 
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <site-footer></site-footer>
+
+    <script src="main.js"></script>
+    <script src="crud.js"></script>
+</body>
+</html>
